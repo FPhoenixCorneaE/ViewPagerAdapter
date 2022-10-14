@@ -3,29 +3,34 @@ package com.fphoenixcorneae.widget.viewpager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.commitNow
+import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.adapter.FragmentStateAdapter.FragmentTransactionCallback.OnPostEventListener
 import androidx.viewpager2.widget.ViewPager2
 
 /**
  * ViewPager2 适配器
  */
-open class FragmentStatePager2ItemAdapter : FragmentStateAdapter {
+class FragmentStatePager2ItemAdapter : FragmentStateAdapter {
 
     private val mPages: FragmentPagerItems
     private var mFragmentManager: FragmentManager
 
     constructor(
         fragmentActivity: FragmentActivity,
-        pages: FragmentPagerItems
-    ) : super(fragmentActivity) {
+        pages: FragmentPagerItems,
+        lifecycle: Lifecycle,
+    ) : super(fragmentActivity.supportFragmentManager, lifecycle) {
         this.mFragmentManager = fragmentActivity.supportFragmentManager
         this.mPages = pages
     }
 
     constructor(
         fragment: Fragment,
-        pages: FragmentPagerItems
-    ) : super(fragment) {
+        pages: FragmentPagerItems,
+        lifecycle: Lifecycle,
+    ) : super(fragment.childFragmentManager, lifecycle) {
         this.mFragmentManager = fragment.childFragmentManager
         this.mPages = pages
     }
@@ -60,5 +65,29 @@ open class FragmentStatePager2ItemAdapter : FragmentStateAdapter {
 
     private fun getPagerItem(position: Int): FragmentPagerItem {
         return mPages[position]
+    }
+
+    /**
+     * https://stackoom.com/zh/question/3sIwj
+     */
+    init {
+        // Add a FragmentTransactionCallback to handle changing
+        // the primary navigation fragment
+        registerFragmentTransactionCallback(object : FragmentTransactionCallback() {
+            override fun onFragmentMaxLifecyclePreUpdated(
+                fragment: Fragment,
+                maxLifecycleState: Lifecycle.State,
+            ) = if (maxLifecycleState == Lifecycle.State.RESUMED) {
+                // This fragment is becoming the active Fragment - set it to
+                // the primary navigation fragment in the OnPostEventListener
+                OnPostEventListener {
+                    fragment.parentFragmentManager.commitNow {
+                        setPrimaryNavigationFragment(fragment)
+                    }
+                }
+            } else {
+                super.onFragmentMaxLifecyclePreUpdated(fragment, maxLifecycleState)
+            }
+        })
     }
 }

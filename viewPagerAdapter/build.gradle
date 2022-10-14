@@ -29,7 +29,13 @@ android {
 dependencies {
     compileOnly("androidx.appcompat:appcompat:1.4.1")
     compileOnly("androidx.core:core-ktx:1.7.0")
-    api("androidx.viewpager2:viewpager2:1.0.0")
+    // fragment
+    implementation("androidx.fragment:fragment-ktx:1.5.2") {
+        exclude group: "androidx.core", module: "core-ktx"
+    }
+    api("androidx.viewpager2:viewpager2:1.1.0-beta01") {
+        exclude group: "androidx.fragment", module: "fragment"
+    }
 }
 
 apply from: "maven-publish.gradle"

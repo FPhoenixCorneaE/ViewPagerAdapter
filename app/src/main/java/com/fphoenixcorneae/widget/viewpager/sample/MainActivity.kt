@@ -93,7 +93,8 @@ class MainActivity : AppCompatActivity() {
                             )
                         }
                     }
-                    .create()
+                    .create(),
+                lifecycle
             )
         }
     }
